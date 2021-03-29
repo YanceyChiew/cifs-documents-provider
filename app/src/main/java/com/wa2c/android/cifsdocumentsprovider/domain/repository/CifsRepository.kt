@@ -202,7 +202,9 @@ class CifsRepository @Inject constructor(
      */
     suspend fun renameFile(sourceUri: String, newName: String): CifsFile? {
         return withContext(Dispatchers.IO) {
-            val targetUri = if (sourceUri.isDirectoryUri) {
+            val targetUri = if (newName.isDirectoryUri) {
+                newName.plus(Uri.parse(sourceUri).LastPathSegment)
+            } else if (sourceUri.isDirectoryUri) {
                 sourceUri.trimEnd('/').replaceAfterLast('/', newName) + '/'
             } else {
                 sourceUri.replaceAfterLast('/', newName)
@@ -250,7 +252,7 @@ class CifsRepository @Inject constructor(
                 val targetConnection = getConnection(targetUri) ?: return@withContext null
                 if (sourceConnection == targetConnection) {
                     // Same connection
-                    Uri.parse(targetUri).lastPathSegment?.let { renameFile(sourceUri, it) }
+                    Uri.parse(targetUri).Path?.let { renameFile(sourceUri, it) }
                 } else {
                     // Different connection
                     copyFile(sourceUri, targetUri)?.also {
